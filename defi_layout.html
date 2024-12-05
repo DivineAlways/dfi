@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1e2f;
+            color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 90%;
+            margin: auto;
+            padding: 40px 0;
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+        }
+        .search-bar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .search-bar input[type="text"] {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            width: 250px;
+        }
+        .search-bar button {
+            padding: 10px;
+            margin-left: 10px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .stock-card {
+            background: #2e2e3e;
+            padding: 20px;
+            margin: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+            width: 300px;
+            text-align: center;
+        }
+        .stock-card:hover {
+            transform: translateY(-5px);
+        }
+        .stock-card h3 {
+            margin: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #4caf50;
+        }
+        .stock-metrics {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+        }
+        .stock-news {
+            margin-top: 15px;
+            text-align: left;
+        }
+        .stock-news a {
+            color: #4caf50;
+            text-decoration: none;
+        }
+        .stock-news a:hover {
+            text-decoration: underline;
+        }
+        .stock-image {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+        .low-code-container {
+            background: #2e2e3e;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        .chatgpt-analysis {
+            margin-top: 30px;
+            padding: 20px;
+            background: #2e2e3e;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        .chatgpt-analysis textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+        .filter-bar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .filter-bar select {
+            padding: 10px;
+            margin: 0 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background-color: #2e2e3e;
+            color: #f0f0f0;
+        }
+        .filter-bar button {
+            padding: 10px;
+            background-color: #4caf50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Stock Dashboard</h1>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" id="stockSymbol" placeholder="Enter Stock Symbol (e.g., AAPL)">
+            <button onclick="fetchStockData()">Fetch Data</button>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <select id="selectMetric">
+                <option value="rsi">RSI Indicator</option>
+                <option value="volume">Volume Data</option>
+                <option value="priceHistory">Price History Chart</option>
+                <option value="movingAverage">Moving Average</option>
+                <option value="marketCap">Market Capitalization</option>
+            </select>
+            <button onclick="applyFilters()">Apply Filters</button>
+        </div>
+
+        <!-- Low-Code Customization Section -->
+        <div class="low-code-container">
+            <h3>Low-Code Dashboard Customization</h3>
+            <p>Drag and drop components to customize your stock cards below:</p>
+            <!-- Placeholder for low-code features (e.g., drag-and-drop tools) -->
+            <div id="lowCodeComponents" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                <div class="stock-card" draggable="true">
+                    <h4>RSI Indicator</h4>
+                    <p>Shows the RSI for selected stock.</p>
+                </div>
+                <div class="stock-card" draggable="true">
+                    <h4>Volume Data</h4>
+                    <p>Shows volume trends for selected stock.</p>
+                </div>
+                <div class="stock-card" draggable="true">
+                    <h4>Price History Chart</h4>
+                    <p>Displays a historical price chart.</p>
+                </div>
+                <div class="stock-card" draggable="true">
+                    <h4>Moving Average</h4>
+                    <p>Shows the moving average for selected stock.</p>
+                </div>
+                <div class="stock-card" draggable="true">
+                    <h4>Market Capitalization</h4>
+                    <p>Shows the market cap for selected stock.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Cards Section -->
+        <div id="stockCardsContainer" style="display: flex; flex-wrap: wrap; justify-content: center;">
+            <!-- Predefined stock cards for companies with good RSI indicators -->
+            <div class="stock-card">
+                <img src="https://logo.clearbit.com/apple.com" alt="Apple Logo" class="stock-image">
+                <h3>AAPL - Apple Inc.</h3>
+                <div class="stock-metrics">
+                    <p>Price: $150.00</p>
+                    <p>Volume: 70M</p>
+                    <p>RSI: 68 (Good)</p>
+                </div>
+                <div class="stock-news">
+                    <h4>Recent News:</h4>
+                    <ul>
+                        <li><a href="https://finance.yahoo.com/quote/AAPL" target="_blank">Apple hits new high</a></li>
+                        <li><a href="https://www.cnbc.com/quotes/AAPL" target="_blank">CNBC: AAPL latest market news</a></li>
+                        <li><a href="https://www.reuters.com/companies/AAPL.O" target="_blank">Reuters: Apple Inc. stock analysis</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="stock-card">
+                <img src="https://logo.clearbit.com/tesla.com" alt="Tesla Logo" class="stock-image">
+                <h3>TSLA - Tesla Inc.</h3>
+                <div class="stock-metrics">
+                    <p>Price: $750.00</p>
+                    <p>Volume: 35M</p>
+                    <p>RSI: 65 (Good)</p>
+                </div>
+                <div class="stock-news">
+                    <h4>Recent News:</h4>
+                    <ul>
+                        <li><a href="https://finance.yahoo.com/quote/TSLA" target="_blank">Tesla's growth outlook</a></li>
+                        <li><a href="https://www.cnbc.com/quotes/TSLA" target="_blank">CNBC: TSLA updates</a></li>
+                        <li><a href="https://www.reuters.com/companies/TSLA.O" target="_blank">Reuters: Tesla stock insights</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="stock-card">
+                <img src="https://logo.clearbit.com/mcdonalds.com" alt="McDonald's Logo" class="stock-image">
+                <h3>MCD - McDonald's Corp.</h3>
+                <div class="stock-metrics">
+                    <p>Price: $230.00</p>
+                    <p>Volume: 20M</p>
+                    <p>RSI: 62 (Good)</p>
+                </div>
+                <div class="stock-news">
+                    <h4>Recent News:</h4>
+                    <ul>
+                        <li><a href="https://finance.yahoo.com/quote/MCD" target="_blank">McDonald's earnings beat estimates</a></li>
+                        <li><a href="https://www.cnbc.com/quotes/MCD" target="_blank">CNBC: MCD growth insights</a></li>
+                        <li><a href="https://www.reuters.com/companies/MCD.N" target="_blank">Reuters: McDonald's stock performance</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="stock-card">
+                <img src="https://logo.clearbit.com/nvidia.com" alt="NVIDIA Logo" class="stock-image">
+                <h3>NVDA - NVIDIA Corp.</h3>
+                <div class="stock-metrics">
+                    <p>Price: $300.00</p>
+                    <p>Volume: 50M</p>
+                    <p>RSI: 67 (Good)</p>
+                </div>
+                <div class="stock-news">
+                    <h4>Recent News:</h4>
+                    <ul>
+                        <li><a href="https://finance.yahoo.com/quote/NVDA" target="_blank">NVIDIA's gaming segment growth</a></li>
+                        <li><a href="https://www.cnbc.com/quotes/NVDA" target="_blank">CNBC: NVDA latest updates</a></li>
+                        <li><a href="https://www.reuters.com/companies/NVDA.O" target="_blank">Reuters: NVIDIA stock analysis</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ChatGPT Analysis Section -->
+        <div class="chatgpt-analysis">
+            <h3>Ask ChatGPT for Analysis</h3>
+            <label for="userQuestion">Enter your question:</label>
+            <textarea id="userQuestion" rows="4" placeholder="e.g., What are the prospects for this stock in the next quarter?"></textarea>
+            <button onclick="analyzeStockData()">Analyze</button>
+            <h3>ChatGPT Analysis Result:</h3>
+            <pre id="analysisResult"></pre>
+        </div>
+    </div>
+
+    <script>
+        async function fetchStockData() {
+            const stockSymbol = document.getElementById('stockSymbol').value;
+            if (!stockSymbol) {
+                alert('Please enter a stock symbol.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/getStockData', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ stockSymbol })
+                });
+                const data = await response.json();
+                displayStockCard(data);
+            } catch (error) {
+                console.error('Error fetching stock data:', error);
+                alert('Failed to fetch stock data.');
+            }
+        }
+
+        function displayStockCard(data) {
+            const container = document.getElementById('stockCardsContainer');
+            container.innerHTML = '';
+            if (data.stockData) {
+                const card = document.createElement('div');
+                card.className = 'stock-card';
+                card.innerHTML = `
+                    <h3>${data.stockData[0].ticker} - ${data.stockData[0].name}</h3>
+                    <div class="stock-metrics">
+                        <p>Price: $${data.stockData[0].close}</p>
+                        <p>Volume: ${data.stockData[0].volume}</p>
+                        <p>RSI: ${data.stockData[0].rsi || 'N/A'}</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            } else {
+                container.innerHTML = '<p>No data found for the entered stock symbol.</p>';
+            }
+        }
+
+        async function analyzeStockData() {
+            const stockSymbol = document.getElementById('stockSymbol').value;
+            const userQuestion = document.getElementById('userQuestion').value;
+            if (!stockSymbol || !userQuestion) {
+                alert('Please enter both stock symbol and your question.');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/getStockData', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ stockSymbol, userQuestion })
+                });
+                const data = await response.json();
+                document.getElementById('analysisResult').innerText = data.analysis;
+            } catch (error) {
+                console.error('Error analyzing stock data:', error);
+                alert('Failed to analyze stock data.');
+            }
+        }
+
+        // Make the low-code dashboard customization section interactive using SortableJS
+        document.addEventListener('DOMContentLoaded', () => {
+            const lowCodeContainer = document.getElementById('lowCodeComponents');
+            Sortable.create(lowCodeContainer, {
+                animation: 150,
+                onEnd: function (evt) {
+                    console.log('Component moved:', evt.item);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
